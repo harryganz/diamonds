@@ -1,0 +1,4 @@
+# Ignore any executables in the root folder
+/*.exe
+# Ignore log files
+*.log
