@@ -22,14 +22,14 @@ func main() {
 
 	// Initialize a map of all the parameters using default values
 	params := map[string]interface{}{
-		"shape":      "Heart",
+		"shape":      "Round",
 		"minCarat":   0.2,
 		"maxCarat":   30.0,
 		"minColor":   1,
 		"maxColor":   9,
 		"minPrice":   100.0,
 		"maxPrice":   1000000.0,
-		"minCut":     2,
+		"minCut":     5,
 		"maxCut":     1,
 		"minClarity": 1,
 		"maxClarity": 10,
