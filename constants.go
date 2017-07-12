@@ -1,9 +1,5 @@
 package diamonds
 
-import (
-//"gopkg.in/yaml.v2"
-)
-
 // A Shape is the shape of a diamond
 type Shape uint32
 
