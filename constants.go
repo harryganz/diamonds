@@ -4,19 +4,20 @@ package diamonds
 type Shape uint32
 
 const (
-	None     Shape = iota // 0
-	Round                 // 1
-	Princess              // 2
-	Cushion               // 3
-	Radiant               // 4
-	Asscher               // 5
-	Emerald               // 6
-	Pear                  // 7
-	Heart                 // 8
-	Oval                  // 9
-	Marquise              // 10
-	Baguette              // 11
-	Trillion              // 12
+	None       Shape = iota // 0
+	Round                   // 1
+	Princess                // 2
+	Cushion                 // 3
+	Radiant                 // 4
+	Asscher                 // 5
+	Emerald                 // 6
+	Pear                    // 7
+	Heart                   // 8
+	Oval                    // 9
+	Marquise                // 10
+	Baguette                // 11
+	Trillion                // 12
+	NUM_SHAPES              // 13
 )
 
 // String returns the string representation of a Shape
