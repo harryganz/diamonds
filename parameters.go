@@ -1,17 +1,14 @@
 package diamonds
 
 import (
-	"fmt"
-
 	"gopkg.in/yaml.v2"
 )
 
+// The Parameters struct handles parameters sent to the diamond search engine.
+// These parameters are used in constructing the query string for searching
+// diamonds
 type Parameters struct {
 	shape string
-}
-
-func (p Parameters) String() string {
-	return fmt.Sprintf("{shape: %s}", p.shape)
 }
 
 // GetShape returns the shape field for the parameter instance
@@ -27,17 +24,17 @@ func NewParameters(shape Shape) Parameters {
 	}
 }
 
-// NewParametersFromBytes returns a parameter instance from a YAML byte array.
+// NewParametersFromYaml returns a parameter instance from a YAML byte array.
 // The expected fields are the same as for NewParameters
 // Any missing or invalid fields will be replaced by default values
-func NewParametersFromBytes(in []byte) Parameters {
+func NewParametersFromYaml(config []byte) Parameters {
 	params := struct {
 		Shape string `yaml:"shape"`
 	}{}
 
-	err := yaml.Unmarshal(in, &params)
+	err := yaml.Unmarshal(config, &params)
 	if err != nil {
-		panic("Could not parse YAML ")
+		panic("Could not parse YAML: " + err.Error())
 	}
 
 	return NewParameters(shapeFromString(params.Shape))
