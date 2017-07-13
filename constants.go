@@ -3,51 +3,53 @@ package diamonds
 // A Shape is the shape of a diamond
 type Shape uint32
 
+// Constants for the different shape names
+// Last holds the total number of shapes
 const (
-	None       Shape = iota // 0
-	Round                   // 1
-	Princess                // 2
-	Cushion                 // 3
-	Radiant                 // 4
-	Asscher                 // 5
-	Emerald                 // 6
-	Pear                    // 7
-	Heart                   // 8
-	Oval                    // 9
-	Marquise                // 10
-	Baguette                // 11
-	Trillion                // 12
-	NUM_SHAPES              // 13
+	NoneShape     Shape = iota // 0
+	RoundShape                 // 1
+	PrincessShape              // 2
+	CushionShape               // 3
+	RadiantShape               // 4
+	AsscherShape               // 5
+	EmeraldShape               // 6
+	PearShape                  // 7
+	HeartShape                 // 8
+	OvalShape                  // 9
+	MarquiseShape              // 10
+	BaguetteShape              // 11
+	TrillionShape              // 12
+	NumShapes                  // 13
 )
 
 // String returns the string representation of a Shape
 func (s Shape) String() string {
 	switch s {
-	case None:
+	case NoneShape:
 		return "none"
-	case Round:
+	case RoundShape:
 		return "Round"
-	case Princess:
+	case PrincessShape:
 		return "Princess"
-	case Cushion:
+	case CushionShape:
 		return "Cushion"
-	case Radiant:
+	case RadiantShape:
 		return "Radiant"
-	case Asscher:
+	case AsscherShape:
 		return "Asscher"
-	case Emerald:
+	case EmeraldShape:
 		return "Emerald"
-	case Heart:
+	case HeartShape:
 		return "Heart"
-	case Pear:
+	case PearShape:
 		return "Pear"
-	case Oval:
+	case OvalShape:
 		return "Oval"
-	case Marquise:
+	case MarquiseShape:
 		return "Marquise"
-	case Baguette:
+	case BaguetteShape:
 		return "Baguette"
-	case Trillion:
+	case TrillionShape:
 		return "Trillion"
 	default:
 		panic("Shape was not recognized")

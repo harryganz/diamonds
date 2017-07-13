@@ -1,7 +1,8 @@
 package diamonds
 
 import (
-  "fmt"
+	"fmt"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -10,7 +11,7 @@ type Parameters struct {
 }
 
 func (p Parameters) String() string {
-  return fmt.Sprintf("{shape: %s}", p.shape)
+	return fmt.Sprintf("{shape: %s}", p.shape)
 }
 
 // GetShape returns the shape field for the parameter instance
@@ -45,7 +46,7 @@ func NewParametersFromBytes(in []byte) Parameters {
 // Converts string to valid shape instance
 // returns default shape if invalid or missing
 func shapeFromString(s string) Shape {
-	for i := 0; i < int(NUM_SHAPES); i++ {
+	for i := 0; i < int(NumShapes); i++ {
 		if Shape(i).String() == s {
 			return Shape(i)
 		}
