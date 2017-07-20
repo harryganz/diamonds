@@ -114,7 +114,7 @@ func parsePage(page io.Reader) ([]diamonds.Diamond, error) {
 	return results, nil
 }
 
-func main() {
+func mainer() {
 	params := map[string]string{
 		"shape":      "none",
 		"minCarat":   "0.20",
