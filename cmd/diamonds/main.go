@@ -1,18 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
-	"strconv"
-	"net/url"
-	"net/http"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 
-	"github.com/harryganz/diamonds"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocarina/gocsv"
+	"github.com/harryganz/diamonds"
 )
 
 const (
@@ -25,14 +25,14 @@ func nopReaderCloser() io.ReadCloser {
 
 type multiReadCloser struct {
 	reader io.Reader
-	close func () error
+	close  func() error
 }
 
 func (mrc multiReadCloser) Read(p []byte) (int, error) {
 	return mrc.reader.Read(p)
 }
 
-func (mrc multiReadCloser) Close () error {
+func (mrc multiReadCloser) Close() error {
 	return mrc.close()
 }
 
@@ -62,13 +62,13 @@ func getPage(params map[string]string, rowStart int) (io.ReadCloser, error) {
 	mr := io.MultiReader(head, resp.Body, tail)
 	mrc := multiReadCloser{
 		reader: mr,
-		close: resp.Body.Close,
+		close:  resp.Body.Close,
 	}
 
 	return mrc, nil
 }
 
-func parseFloat (s string) (float64, error) {
+func parseFloat(s string) (float64, error) {
 	return strconv.ParseFloat(s, 64)
 }
 
@@ -79,7 +79,7 @@ func parsePage(page io.Reader) ([]diamonds.Diamond, error) {
 		return []diamonds.Diamond{}, err
 	}
 
-	doc.Find("tr").Each(func (i int, s *goquery.Selection) {
+	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
 		diamond := diamonds.Diamond{}
 		s.Find("td").Each(func(k int, ss *goquery.Selection) {
 			text := ss.Text()
@@ -115,29 +115,29 @@ func parsePage(page io.Reader) ([]diamonds.Diamond, error) {
 }
 
 func main() {
-	params := map[string]string {
-		"shape": "none",
-		"minCarat": "0.20",
-		"maxCarat": "30.00",
-		"minColor": "1",
-		"maxColor": "9",
-		"minPrice": "100",
-		"maxPrice": "1000000",
-		"minCut": "5",
-		"maxCut": "1",
+	params := map[string]string{
+		"shape":      "none",
+		"minCarat":   "0.20",
+		"maxCarat":   "30.00",
+		"minColor":   "1",
+		"maxColor":   "9",
+		"minPrice":   "100",
+		"maxPrice":   "1000000",
+		"minCut":     "5",
+		"maxCut":     "1",
 		"minClarity": "1",
 		"maxClarity": "10",
-		"minDepth": "0.00",
-		"maxDepth": "90.00",
-		"minWidth": "0.00",
-		"maxWidth": "90.00",
-		"gia": "1",
-		"ags": "1",
-		"egl": "0",
-		"oth": "0",
-		"currency": "USD",
-		"sortCol": "price",
-		"sortDir": "ASC",
+		"minDepth":   "0.00",
+		"maxDepth":   "90.00",
+		"minWidth":   "0.00",
+		"maxWidth":   "90.00",
+		"gia":        "1",
+		"ags":        "1",
+		"egl":        "0",
+		"oth":        "0",
+		"currency":   "USD",
+		"sortCol":    "price",
+		"sortDir":    "ASC",
 	}
 
 	results := []diamonds.Diamond{}
