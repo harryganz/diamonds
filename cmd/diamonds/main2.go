@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func main() {
+func main2() {
 	var fileName string
 	var numDiamonds int
 

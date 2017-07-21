@@ -36,18 +36,18 @@ func (mrc multiReadCloser) Close() error {
 	return mrc.close()
 }
 
-func getPage(params map[string]string, rowStart int) (io.ReadCloser, error) {
+func getPage(params diamonds.Parameters, rowStart int) (io.ReadCloser, error) {
 	u, err := url.Parse(baseUrl)
 	if err != nil {
 		return nopReaderCloser(), err
 	}
 
+	params.SetRow(rowStart)
+
 	q := u.Query()
-	for k, v := range params {
+	for k, v := range params.ToMap() {
 		q.Set(k, v)
 	}
-
-	q.Set("rowStart", strconv.Itoa(rowStart))
 
 	u.RawQuery = q.Encode()
 
@@ -114,34 +114,11 @@ func parsePage(page io.Reader) ([]diamonds.Diamond, error) {
 	return results, nil
 }
 
-func mainer() {
-	params := map[string]string{
-		"shape":      "none",
-		"minCarat":   "0.20",
-		"maxCarat":   "30.00",
-		"minColor":   "1",
-		"maxColor":   "9",
-		"minPrice":   "100",
-		"maxPrice":   "1000000",
-		"minCut":     "5",
-		"maxCut":     "1",
-		"minClarity": "1",
-		"maxClarity": "10",
-		"minDepth":   "0.00",
-		"maxDepth":   "90.00",
-		"minWidth":   "0.00",
-		"maxWidth":   "90.00",
-		"gia":        "1",
-		"ags":        "1",
-		"egl":        "0",
-		"oth":        "0",
-		"currency":   "USD",
-		"sortCol":    "price",
-		"sortDir":    "ASC",
-	}
+func main() {
+	params := diamonds.NewParameters()
 
 	results := []diamonds.Diamond{}
-	for i := 0; i < 5000; i += 20 {
+	for i := 0; i < 100; i += 20 {
 		page, err := getPage(params, i)
 		defer page.Close()
 		if err != nil {
