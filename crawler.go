@@ -12,7 +12,7 @@ type Crawler struct {
   // The starting search parameters to use
   StartParameters Parameters
   pageGenerator func(done <-chan struct{}, start, end, n int) (<-chan int)
-  pageGetter func(done <-chan struct{}, params Parameters, pageNum int) (<-chan io.ReadCloser, <-chan error)
+  pageGetter func(done <-chan struct{}, params Parameters, pageNum <-chan int) (<-chan io.ReadCloser, <-chan error)
   pageParser func(done <-chan struct{}, page <-chan io.ReadCloser) (<-chan []Diamond, <-chan error)
 }
 
