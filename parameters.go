@@ -62,6 +62,10 @@ func NewParameters() Parameters {
 	}
 }
 
+func (p *Parameters) SetRow(n int) {
+		p.rowStart = n
+}  
+
 func (p Parameters) ToMap() map[string]string {
 	out := make(map[string]string)
 	str := reflect.ValueOf(p)
