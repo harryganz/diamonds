@@ -5,8 +5,9 @@ import (
 	"io"
 )
 
-const DefaultBaseUrl = "http://diamondse.info/webService.php"
-
+// Crawler is the managing struct for the diamonds scraper
+// it contains a method, Crawl, that crawls the database and returns
+// the results to a writer outputstream
 type Crawler struct {
 	// BaseURL where the diamonds search engine can be found
 	BaseURL string
@@ -16,35 +17,49 @@ type Crawler struct {
 	// OutputStream is a Writer that takes the output of
 	// of the Crawler
 	OutputStream io.Writer
+	// The number of results to Crawl
+	NumResults int
 	// rowNumberGenerator takes a starting row, ending row, and
 	// number of rows and returns a slice numbers of rows to start
 	// getting pages
 	rowNumberGenerator func(start, end, numRows int) []int
+	// Page getter takes a baseUrl, parameters, and rowNum
+	// and returns a reader and error
+	pageGetter func(baseUrl string, params Parameters, rowStart int) (io.Reader, error)
 }
 
 // NewCrawler returns an instance of a Crawler.
-func NewCrawler(outputStream io.Writer) Crawler {
+func NewCrawler(numResults int, outputStream io.Writer) Crawler {
 	return Crawler{
 		SearchParameters:   NewParameters(),
-		BaseURL:            DefaultBaseUrl,
+		BaseURL:            DefaultBaseURL,
 		OutputStream:       outputStream,
+		NumResults:         numResults,
 		rowNumberGenerator: DefaultRowNumberGenerator,
+		pageGetter:         DefaultPageGetter,
 	}
 }
 
-// Sets the rowNumberGenerator function. This function is used to generate
+// SetRowNumberGenerator sets the rowNumberGenerator function. This function is used to generate
 // row numbers used by the crawler
 func (c *Crawler) SetRowNumberGenerator(rng func(start, end, numRows int) []int) {
 	c.rowNumberGenerator = rng
 }
 
+// SetPageGetter sets the pageGetter function. This function is used to
+// get the diamond search engine results pages
+func (c *Crawler) SetPageGetter(pg func(string, Parameters, int) (io.Reader, error)) {
+	c.pageGetter = pg
+}
+
 // Crawl starts the crawler and prints the results to the OutPutStream
-func (c Crawler) Crawl(rowNum int) error {
+func (c Crawler) Crawl() error {
 	done := make(chan struct{})
 	defer close(done)
 
 	start := 0
 	end := 100
+	rowNum := c.NumResults
 	gen := func(done <-chan struct{}) <-chan int {
 		out := make(chan int)
 
@@ -67,19 +82,4 @@ func (c Crawler) Crawl(rowNum int) error {
 	}
 
 	return nil
-}
-
-// DefaultRowNumberGenerator returns a slice of integers
-// between start and end of length rowNums
-func DefaultRowNumberGenerator(start, end, rowNums int) []int {
-	if rowNums > (end - start) {
-		panic("number of rows cannot be greater than number of rows between start and end")
-	}
-
-	out := []int{}
-	for ; start < end && rowNums >= 0; start, rowNums = start+1, rowNums-1 {
-		out = append(out, start)
-	}
-
-	return out
 }

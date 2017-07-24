@@ -33,8 +33,8 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		outputStream := os.Stdout
 		defer outputStream.Close()
-		crawler := diamonds.NewCrawler(outputStream)
-		err := crawler.Crawl(10)
+		crawler := diamonds.NewCrawler(10, outputStream)
+		err := crawler.Crawl()
 
 		return err
 	}
