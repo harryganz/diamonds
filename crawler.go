@@ -1,8 +1,9 @@
 package diamonds
 
 import (
-	"fmt"
 	"io"
+
+	"github.com/gocarina/gocsv"
 )
 
 // Crawler is the managing struct for the diamonds scraper
@@ -119,8 +120,15 @@ func (c Crawler) Crawl() error {
 	pages := genPages(done, nums)
 	diamonds := parsePages(done, pages)
 
+	var i int
 	for v := range diamonds {
-		fmt.Fprintln(c.OutputStream, v)
+		if i == 0 {
+			gocsv.Marshal(v, c.OutputStream)
+		} else {
+			gocsv.MarshalWithoutHeaders(v, c.OutputStream)
+		}
+
+		i++
 	}
 
 	return nil
