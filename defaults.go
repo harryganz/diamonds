@@ -2,10 +2,14 @@ package diamonds
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 // DefaultBaseURL is the url for the diamonds search engine database
@@ -59,6 +63,53 @@ func DefaultPageGetter(baseURL string, params Parameters, rowStart int) (io.Read
 	return mrc, nil
 }
 
+// DefaultPageParser returns a slice of Diamonds
+func DefaultPageParser(page io.ReadCloser) ([]Diamond, error) {
+	results := []Diamond{}
+	doc, err := goquery.NewDocumentFromReader(page)
+	if err != nil {
+		return []Diamond{}, err
+	}
+
+	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
+		diamond := Diamond{}
+		s.Find("td").Each(func(k int, ss *goquery.Selection) {
+			text := ss.Text()
+
+			switch k {
+			case 1:
+				diamond.Shape = text
+			case 2:
+				diamond.Carat = parseFloat(text)
+			case 3:
+				diamond.Cut = text
+			case 4:
+				diamond.Color = text
+			case 5:
+				diamond.Clarity = text
+			case 6:
+				diamond.Width = parseFloat(text)
+			case 7:
+				diamond.Depth = parseFloat(text)
+			case 8:
+				diamond.Certification = text
+			case 9:
+				diamond.Dimensions = text
+			case 10:
+				diamond.Price = parseFloat(text[1:])
+			}
+		})
+
+		results = append(results, diamond)
+	})
+
+	if r := recover(); r != nil {
+		return []Diamond{}, errors.New("Unknown error occurred")
+	}
+
+	return results, nil
+}
+
 // Helpers for DefaultPageGetter
 
 func nopReaderCloser() io.ReadCloser {
@@ -76,4 +127,14 @@ func (mrc multiReadCloser) Read(p []byte) (int, error) {
 
 func (mrc multiReadCloser) Close() error {
 	return mrc.close()
+}
+
+// Helpers for DefaultPageParser
+func parseFloat(s string) float64 {
+	result, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return result
 }

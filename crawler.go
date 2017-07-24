@@ -27,6 +27,8 @@ type Crawler struct {
 	// Page getter takes a baseUrl, parameters, and rowNum
 	// and returns a reader and error
 	pageGetter func(baseUrl string, params Parameters, rowStart int) (io.ReadCloser, error)
+	// Pageparser parses the page and returns a slice of Diamonds
+	pageParser func(io.ReadCloser) ([]Diamond, error)
 }
 
 // NewCrawler returns an instance of a Crawler.
@@ -38,6 +40,7 @@ func NewCrawler(numResults int, outputStream io.Writer) Crawler {
 		NumResults:         numResults,
 		rowNumberGenerator: DefaultRowNumberGenerator,
 		pageGetter:         DefaultPageGetter,
+		pageParser:         DefaultPageParser,
 	}
 }
 
@@ -100,6 +103,7 @@ func (c Crawler) Crawl() error {
 
 	for v := range pages {
 		page, _ := ioutil.ReadAll(v)
+		v.Close()
 		fmt.Fprintln(c.OutputStream, string(page))
 	}
 
