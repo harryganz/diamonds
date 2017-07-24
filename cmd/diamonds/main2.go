@@ -24,7 +24,7 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:        "num, n",
-			Value:       100,
+			Value:       20,
 			Usage:       "Number of records to retrieve",
 			Destination: &numDiamonds,
 		},
@@ -33,7 +33,7 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		outputStream := os.Stdout
 		defer outputStream.Close()
-		crawler := diamonds.NewCrawler(10, outputStream)
+		crawler := diamonds.NewCrawler(numDiamonds, outputStream)
 		err := crawler.Crawl()
 
 		return err

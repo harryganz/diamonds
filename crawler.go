@@ -3,6 +3,7 @@ package diamonds
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 )
 
 // Crawler is the managing struct for the diamonds scraper
@@ -25,7 +26,7 @@ type Crawler struct {
 	rowNumberGenerator func(start, end, numRows int) []int
 	// Page getter takes a baseUrl, parameters, and rowNum
 	// and returns a reader and error
-	pageGetter func(baseUrl string, params Parameters, rowStart int) (io.Reader, error)
+	pageGetter func(baseUrl string, params Parameters, rowStart int) (io.ReadCloser, error)
 }
 
 // NewCrawler returns an instance of a Crawler.
@@ -48,7 +49,7 @@ func (c *Crawler) SetRowNumberGenerator(rng func(start, end, numRows int) []int)
 
 // SetPageGetter sets the pageGetter function. This function is used to
 // get the diamond search engine results pages
-func (c *Crawler) SetPageGetter(pg func(string, Parameters, int) (io.Reader, error)) {
+func (c *Crawler) SetPageGetter(pg func(string, Parameters, int) (io.ReadCloser, error)) {
 	c.pageGetter = pg
 }
 
@@ -60,7 +61,7 @@ func (c Crawler) Crawl() error {
 	start := 0
 	end := 100
 	rowNum := c.NumResults
-	gen := func(done <-chan struct{}) <-chan int {
+	genNums := func(done <-chan struct{}) <-chan int {
 		out := make(chan int)
 
 		go func() {
@@ -76,9 +77,30 @@ func (c Crawler) Crawl() error {
 
 		return out
 	}
+	genPages := func(done <-chan struct{}, nums <-chan int) <-chan io.ReadCloser {
+		out := make(chan io.ReadCloser)
 
-	for v := range gen(done) {
-		fmt.Fprint(c.OutputStream, v)
+		go func() {
+			defer close(out)
+			for v := range nums {
+				page, _ := c.pageGetter(c.BaseURL, c.SearchParameters, v)
+				select {
+				case out <- page:
+				case <-done:
+					return
+				}
+			}
+		}()
+
+		return out
+	}
+
+	nums := genNums(done)
+	pages := genPages(done, nums)
+
+	for v := range pages {
+		page, _ := ioutil.ReadAll(v)
+		fmt.Fprintln(c.OutputStream, string(page))
 	}
 
 	return nil

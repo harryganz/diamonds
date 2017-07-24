@@ -19,7 +19,7 @@ func DefaultRowNumberGenerator(start, end, rowNums int) []int {
 	}
 
 	out := []int{}
-	for ; start < end && rowNums >= 0; start, rowNums = start+1, rowNums-1 {
+	for ; start < end && rowNums > 0; start, rowNums = start+20, rowNums-20 {
 		out = append(out, start)
 	}
 
@@ -27,7 +27,7 @@ func DefaultRowNumberGenerator(start, end, rowNums int) []int {
 }
 
 // DefaultPageGetter returns a page from the diamond search engine using the defaults
-func DefaultPageGetter(baseURL string, params Parameters, rowStart int) (io.Reader, error) {
+func DefaultPageGetter(baseURL string, params Parameters, rowStart int) (io.ReadCloser, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nopReaderCloser(), err
