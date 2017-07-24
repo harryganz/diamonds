@@ -3,7 +3,6 @@ package diamonds
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 )
 
 // Crawler is the managing struct for the diamonds scraper
@@ -97,14 +96,31 @@ func (c Crawler) Crawl() error {
 
 		return out
 	}
+	parsePages := func(done <-chan struct{}, pages <-chan io.ReadCloser) <-chan []Diamond {
+		out := make(chan []Diamond)
+
+		go func() {
+			defer close(out)
+			for page := range pages {
+				diamonds, _ := c.pageParser(page)
+				page.Close()
+				select {
+				case out <- diamonds:
+				case <-done:
+					return
+				}
+			}
+		}()
+
+		return out
+	}
 
 	nums := genNums(done)
 	pages := genPages(done, nums)
+	diamonds := parsePages(done, pages)
 
-	for v := range pages {
-		page, _ := ioutil.ReadAll(v)
-		v.Close()
-		fmt.Fprintln(c.OutputStream, string(page))
+	for v := range diamonds {
+		fmt.Fprintln(c.OutputStream, v)
 	}
 
 	return nil
