@@ -114,7 +114,7 @@ func parsePage(page io.Reader) ([]diamonds.Diamond, error) {
 	return results, nil
 }
 
-func main() {
+func _main() {
 	params := diamonds.NewParameters()
 
 	results := []diamonds.Diamond{}

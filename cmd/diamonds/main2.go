@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/harryganz/diamonds"
 	"github.com/urfave/cli"
 )
 
-func main2() {
+func main() {
 	var fileName string
 	var numDiamonds int
 
@@ -31,8 +31,12 @@ func main2() {
 	}
 
 	app.Action = func(c *cli.Context) error {
-		fmt.Printf("File was %s. Num was %d\n", fileName, numDiamonds)
-		return nil
+		outputStream := os.Stdout
+		defer outputStream.Close()
+		crawler := diamonds.NewCrawler(outputStream)
+		err := crawler.Crawl(10)
+
+		return err
 	}
 
 	app.Run(os.Args)
