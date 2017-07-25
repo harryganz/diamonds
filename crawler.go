@@ -62,7 +62,7 @@ func (c Crawler) Crawl() error {
 	defer close(done)
 
 	start := 0
-	end := 100
+	end := 508000
 	rowNum := c.NumResults
 	genNums := func(done <-chan struct{}) <-chan int {
 		out := make(chan int)
