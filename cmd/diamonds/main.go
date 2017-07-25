@@ -10,6 +10,7 @@ import (
 func main() {
 	var fileName string
 	var numDiamonds int
+	var numThreads int
 
 	app := cli.NewApp()
 	app.Name = "diamonds"
@@ -28,6 +29,12 @@ func main() {
 			Usage:       "Number of records to retrieve",
 			Destination: &numDiamonds,
 		},
+		cli.IntFlag{
+			Name: "threads, t",
+			Value: 1,
+			Usage: "Number of threads to use for querying search engine",
+			Destination: &numThreads,
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
@@ -37,6 +44,7 @@ func main() {
 		}
 		defer outputStream.Close()
 		crawler := diamonds.NewCrawler(numDiamonds, outputStream)
+		crawler.NumThreads = numThreads
 		err = crawler.Crawl()
 
 		return err
