@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+  "time"
+  "math/rand"
+  "regexp"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -22,12 +25,13 @@ func DefaultRowNumberGenerator(start, end, rowNums int) []int {
 		panic("number of rows cannot be greater than number of rows between start and end")
 	}
 
-	out := []int{}
-	for ; start < end && rowNums > 0; start, rowNums = start+20, rowNums-20 {
-		out = append(out, start)
-	}
+	pages := sample(rowNums/20, start/20, end/20)
+  rows := []int{}
+  for _, page := range pages {
+    rows = append(rows, page * 20)
+  }
 
-	return out
+  return rows
 }
 
 // DefaultPageGetter returns a page from the diamond search engine using the defaults
@@ -110,6 +114,28 @@ func DefaultPageParser(page io.ReadCloser) ([]Diamond, error) {
 	return results, nil
 }
 
+// Helpers for DefaultRowNumGenerator
+
+func sample(k, start, end int) []int {
+	var r []int
+	src := rand.NewSource(time.Now().Unix())
+	rnd := rand.New(src)
+
+	for i, v, n := 0, start, (end - start + 1); i < n; i, v = i + 1, v + 1 {
+		if i < k {
+			r = append(r, v)
+		} else {
+			j := rnd.Intn(n)
+
+			if j < k {
+				r[j] = v
+			}
+		}
+	}
+
+	return r
+}
+
 // Helpers for DefaultPageGetter
 
 func nopReaderCloser() io.ReadCloser {
@@ -130,8 +156,9 @@ func (mrc multiReadCloser) Close() error {
 }
 
 // Helpers for DefaultPageParser
+var commaRegex = regexp.MustCompile(",")
 func parseFloat(s string) float64 {
-	result, err := strconv.ParseFloat(s, 64)
+	result, err := strconv.ParseFloat(commaRegex.ReplaceAllString(s, ""), 64)
 	if err != nil {
 		panic(err)
 	}
