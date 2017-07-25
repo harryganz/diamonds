@@ -1,7 +1,11 @@
 package diamonds
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
+	"regexp"
+	"strconv"
 
 	"github.com/gocarina/gocsv"
 )
@@ -61,14 +65,22 @@ func (c Crawler) Crawl() error {
 	done := make(chan struct{})
 	defer close(done)
 
-	end := 508000
+	firstPage, err := c.pageGetter(c.BaseURL, c.SearchParameters, 0)
+	if err != nil {
+		return err
+	}
+	totalRows, err := getTotalRows(firstPage)
+	if err != nil {
+		return err
+	}
+
 	rowNum := c.NumResults
 	genNums := func(done <-chan struct{}) <-chan int {
 		out := make(chan int)
 
 		go func() {
 			defer close(out)
-			for _, v := range c.rowNumberGenerator(end, rowNum) {
+			for _, v := range c.rowNumberGenerator(totalRows, rowNum) {
 				select {
 				case out <- v:
 				case <-done:
@@ -131,4 +143,17 @@ func (c Crawler) Crawl() error {
 	}
 
 	return nil
+}
+
+var rowNumRegex = regexp.MustCompile("Displaying [0-9]+ to [0-9]+ of [0-9]+ diamonds")
+
+func getTotalRows(page io.ReadCloser) (int, error) {
+	body, err := ioutil.ReadAll(page)
+	if err != nil {
+		return 0, err
+	}
+	slice := rowNumRegex.Find(body)
+	str := bytes.Split(slice, []byte(" "))[5]
+
+	return strconv.Atoi(string(str))
 }
