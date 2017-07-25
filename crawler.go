@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"github.com/gocarina/gocsv"
 )
@@ -24,6 +25,8 @@ type Crawler struct {
 	OutputStream io.Writer
 	// The number of results to Crawl
 	NumResults int
+	// The number of threads to use in querying search engine
+	NumThreads int
 	// rowNumberGenerator takes an ending row, and
 	// number of rows and returns a slice numbers of rows to start
 	// getting pages
@@ -42,6 +45,7 @@ func NewCrawler(numResults int, outputStream io.Writer) Crawler {
 		BaseURL:            DefaultBaseURL,
 		OutputStream:       outputStream,
 		NumResults:         numResults,
+		NumThreads:         1,
 		rowNumberGenerator: DefaultRowNumberGenerator,
 		pageGetter:         DefaultPageGetter,
 		pageParser:         DefaultPageParser,
@@ -69,12 +73,16 @@ func (c Crawler) Crawl() error {
 	if err != nil {
 		return err
 	}
+	// Total number of rows
 	totalRows, err := getTotalRows(firstPage)
 	if err != nil {
 		return err
 	}
 
+	// Number of results to return (within 20)
 	rowNum := c.NumResults
+
+	// Returns row numbers to use
 	genNums := func(done <-chan struct{}) <-chan int {
 		out := make(chan int)
 
@@ -91,6 +99,8 @@ func (c Crawler) Crawl() error {
 
 		return out
 	}
+
+	// Returns pages
 	genPages := func(done <-chan struct{}, nums <-chan int) <-chan io.ReadCloser {
 		out := make(chan io.ReadCloser)
 
@@ -108,6 +118,41 @@ func (c Crawler) Crawl() error {
 
 		return out
 	}
+
+	// Merges genPages channels together for efficiency
+	mergePages := func(done <-chan struct{}, cs ...<-chan io.ReadCloser) <-chan io.ReadCloser {
+		out := make(chan io.ReadCloser)
+		var wg sync.WaitGroup // Wait group to wait for all channels to close
+
+		// Adds output from single channel to combined channel
+		output := func(c <-chan io.ReadCloser) {
+			defer wg.Done()
+			for p := range c {
+				select {
+				case out <- p:
+				case <-done:
+					return
+				}
+			}
+		}
+
+		// Creating a waiting group for every channel
+		wg.Add(len(cs))
+		// Merge channels to output
+		for _, c := range cs {
+			go output(c)
+		}
+
+		// Wait for all channels to be done to close
+		go func() {
+			wg.Wait()
+			close(out)
+		}()
+
+		return out
+	}
+
+	// Parse pages to get Diamond data
 	parsePages := func(done <-chan struct{}, pages <-chan io.ReadCloser) <-chan []Diamond {
 		out := make(chan []Diamond)
 
@@ -127,10 +172,20 @@ func (c Crawler) Crawl() error {
 		return out
 	}
 
+	// Start procedure
+
 	nums := genNums(done)
-	pages := genPages(done, nums)
+	// Utilize multiple threads to get pages as this is the rate limiting
+	// step, Fan-Out
+	var pageWorkers []<-chan io.ReadCloser
+	for i := 0; i < c.NumThreads; i++ {
+		pageWorkers = append(pageWorkers, genPages(done, nums))
+	}
+	// Merge workers into one channel Fan-In
+	pages := mergePages(done, pageWorkers...)
 	diamonds := parsePages(done, pages)
 
+	// TODO use a configured text marshaller instead of hardcoding it here
 	var i int
 	for v := range diamonds {
 		if i == 0 {
@@ -142,6 +197,7 @@ func (c Crawler) Crawl() error {
 		i++
 	}
 
+	// TODO error handling (e.g. error channel with consuming go func)
 	return nil
 }
 
