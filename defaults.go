@@ -2,36 +2,36 @@ package diamonds
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
-  "time"
-  "math/rand"
-  "regexp"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
 // DefaultBaseURL is the url for the diamonds search engine database
 const DefaultBaseURL = "http://diamondse.info/webService.php"
+const pageSize = 20
 
 // DefaultRowNumberGenerator returns a slice of integers
 // between start and end of length rowNums
-func DefaultRowNumberGenerator(start, end, rowNums int) []int {
-	if rowNums > (end - start) {
-		panic("number of rows cannot be greater than number of rows between start and end")
+func DefaultRowNumberGenerator(end, rowNums int) []int {
+	if rowNums > end {
+		panic("number of rows cannot be greater than number of total rows")
 	}
 
-	pages := sample(rowNums/20, start/20, end/20)
-  rows := []int{}
-  for _, page := range pages {
-    rows = append(rows, page * 20)
-  }
+	pages := sample(rowNums/20, end/20)
+	rows := []int{}
+	for _, page := range pages {
+		rows = append(rows, page*20)
+	}
 
-  return rows
+	return rows
 }
 
 // DefaultPageGetter returns a page from the diamond search engine using the defaults
@@ -107,28 +107,24 @@ func DefaultPageParser(page io.ReadCloser) ([]Diamond, error) {
 		results = append(results, diamond)
 	})
 
-	if r := recover(); r != nil {
-		return []Diamond{}, errors.New("Unknown error occurred")
-	}
-
 	return results, nil
 }
 
 // Helpers for DefaultRowNumGenerator
 
-func sample(k, start, end int) []int {
+func sample(k, end int) []int {
 	var r []int
 	src := rand.NewSource(time.Now().Unix())
 	rnd := rand.New(src)
 
-	for i, v, n := 0, start, (end - start + 1); i < n; i, v = i + 1, v + 1 {
+	for i, n := 0, (end + 1); i < n; i++ {
 		if i < k {
-			r = append(r, v)
+			r = append(r, i)
 		} else {
 			j := rnd.Intn(n)
 
 			if j < k {
-				r[j] = v
+				r[j] = i
 			}
 		}
 	}
@@ -157,6 +153,7 @@ func (mrc multiReadCloser) Close() error {
 
 // Helpers for DefaultPageParser
 var commaRegex = regexp.MustCompile(",")
+
 func parseFloat(s string) float64 {
 	result, err := strconv.ParseFloat(commaRegex.ReplaceAllString(s, ""), 64)
 	if err != nil {

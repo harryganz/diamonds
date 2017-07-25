@@ -20,10 +20,10 @@ type Crawler struct {
 	OutputStream io.Writer
 	// The number of results to Crawl
 	NumResults int
-	// rowNumberGenerator takes a starting row, ending row, and
+	// rowNumberGenerator takes an ending row, and
 	// number of rows and returns a slice numbers of rows to start
 	// getting pages
-	rowNumberGenerator func(start, end, numRows int) []int
+	rowNumberGenerator func(end, numRows int) []int
 	// Page getter takes a baseUrl, parameters, and rowNum
 	// and returns a reader and error
 	pageGetter func(baseUrl string, params Parameters, rowStart int) (io.ReadCloser, error)
@@ -46,7 +46,7 @@ func NewCrawler(numResults int, outputStream io.Writer) Crawler {
 
 // SetRowNumberGenerator sets the rowNumberGenerator function. This function is used to generate
 // row numbers used by the crawler
-func (c *Crawler) SetRowNumberGenerator(rng func(start, end, numRows int) []int) {
+func (c *Crawler) SetRowNumberGenerator(rng func(end, numRows int) []int) {
 	c.rowNumberGenerator = rng
 }
 
@@ -61,7 +61,6 @@ func (c Crawler) Crawl() error {
 	done := make(chan struct{})
 	defer close(done)
 
-	start := 0
 	end := 508000
 	rowNum := c.NumResults
 	genNums := func(done <-chan struct{}) <-chan int {
@@ -69,7 +68,7 @@ func (c Crawler) Crawl() error {
 
 		go func() {
 			defer close(out)
-			for _, v := range c.rowNumberGenerator(start, end, rowNum) {
+			for _, v := range c.rowNumberGenerator(end, rowNum) {
 				select {
 				case out <- v:
 				case <-done:
