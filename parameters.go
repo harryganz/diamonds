@@ -38,7 +38,7 @@ func NewParameters() Parameters {
 	return Parameters{
 		shape:      "none",
 		minCarat:   0.2,
-		maxCarat:   30.0,
+		maxCarat:   5.0,
 		minColor:   1,
 		maxColor:   9,
 		minPrice:   100.0,
