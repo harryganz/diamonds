@@ -30,9 +30,9 @@ func main() {
 			Destination: &numDiamonds,
 		},
 		cli.IntFlag{
-			Name: "threads, t",
-			Value: 1,
-			Usage: "Number of threads to use for querying search engine",
+			Name:        "threads, t",
+			Value:       1,
+			Usage:       "Number of threads to use for querying search engine",
 			Destination: &numThreads,
 		},
 	}
