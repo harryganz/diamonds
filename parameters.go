@@ -5,6 +5,8 @@ import (
 	"strconv"
 )
 
+// The Parameters struct holds the search parameters
+// to use when querying the diamond search engine
 type Parameters struct {
 	// Unexported fields
 	shape      string
@@ -62,10 +64,13 @@ func NewParameters() Parameters {
 	}
 }
 
+// SetRow sets the row Parameter to the passed in integer
 func (p *Parameters) SetRow(n int) {
 	p.rowStart = n
 }
 
+// ToMap converts the Parameters object to a map
+// with string keys and string values
 func (p Parameters) ToMap() map[string]string {
 	out := make(map[string]string)
 	str := reflect.ValueOf(p)
