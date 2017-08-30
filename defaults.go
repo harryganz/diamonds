@@ -34,7 +34,10 @@ func DefaultRowNumberGenerator(end, rowNums int) []int {
 	return rows
 }
 
-// DefaultPageGetter returns a page from the diamond search engine using the defaults
+// DefaultPageGetter returns a page from the diamond search engine as a ReadCloser
+// given a baseUrl string, a Parameter instance, and a starting row  as an int.
+// It will surround the returned page with html, body, table, and tbody tags so
+// the parser can parse it.
 func DefaultPageGetter(baseURL string, params Parameters, rowStart int) (io.ReadCloser, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
@@ -67,7 +70,8 @@ func DefaultPageGetter(baseURL string, params Parameters, rowStart int) (io.Read
 	return mrc, nil
 }
 
-// DefaultPageParser returns a slice of Diamonds
+// DefaultPageParser parses an html page from the diamonds search engine
+// and returns an slice of Diamond objects
 func DefaultPageParser(page io.ReadCloser) ([]Diamond, error) {
 	results := []Diamond{}
 	doc, err := goquery.NewDocumentFromReader(page)
@@ -112,6 +116,8 @@ func DefaultPageParser(page io.ReadCloser) ([]Diamond, error) {
 
 // Helpers for DefaultRowNumGenerator
 
+// sample returns a slice random uniform sample of integers
+// of length k from 0 through end as a slice of integers
 func sample(k, end int) []int {
 	var r []int
 	src := rand.NewSource(time.Now().Unix())
@@ -134,10 +140,13 @@ func sample(k, end int) []int {
 
 // Helpers for DefaultPageGetter
 
+// Returns a no-op ReadCloser
 func nopReaderCloser() io.ReadCloser {
 	return ioutil.NopCloser(bytes.NewBuffer([]byte{}))
 }
 
+// The multiReadCloser struct allows multiple readers to be concatenated
+// as part of a single ReadCloser
 type multiReadCloser struct {
 	reader io.Reader
 	close  func() error
@@ -154,6 +163,7 @@ func (mrc multiReadCloser) Close() error {
 // Helpers for DefaultPageParser
 var commaRegex = regexp.MustCompile(",")
 
+// Extends strconv.ParseFloat to replace commas with blanks
 func parseFloat(s string) float64 {
 	result, err := strconv.ParseFloat(commaRegex.ReplaceAllString(s, ""), 64)
 	if err != nil {
