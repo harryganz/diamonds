@@ -16,7 +16,6 @@ import (
 
 // DefaultBaseURL is the url for the diamonds search engine database
 const DefaultBaseURL = "http://diamondse.info/webService.php"
-const pageSize = 20
 
 // DefaultRowNumberGenerator returns a slice of integers
 // between start and end of length rowNums
